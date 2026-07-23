@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>しょうがっこう1ねんせい たしざん・ひきざん</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- KaTeX CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font: M PLUS Rounded 1c -->
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        html, body {
+            height: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            touch-action: manipulation;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background-color: #f0fdf4;
+        }
+
+        /* アニメーション定義 */
+        .bounce-animation {
+            animation: bounce 0.6s ease infinite alternate;
+        }
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-6px); }
+        }
+
+        .pop-in {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* ブロックが1つずつゆっくり右から飛んでくる */
+        .slide-in-right-slow {
+            animation: slideInRightSlow 1.2s cubic-bezier(0.25, 1, 0.5, 1) both;
+        }
+        @keyframes slideInRightSlow {
+            0% { transform: translateX(60px) scale(0.3); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateX(0) scale(1); opacity: 1; }
+        }
+
+        /* 下の列から上の10の枠へスライド移動するアニメーション */
+        .slide-to-slot {
+            animation: slideToSlot 1.0s cubic-bezier(0.25, 1, 0.5, 1) both;
+        }
+        @keyframes slideToSlot {
+            0% { 
+                transform: translate(var(--start-x, 0px), 60px) scale(1); 
+                opacity: 1; 
+            }
+            100% { 
+                transform: translate(0, 0) scale(1); 
+                opacity: 1; 
+            }
+        }
+
+        /* 10とバラに分かれるスライド移動アニメーション */
+        .split-to-ten {
+            animation: splitToTen 1.0s cubic-bezier(0.25, 1, 0.5, 1) both;
+        }
+        @keyframes splitToTen {
+            0% { transform: translateY(30px) scale(0.7); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        .split-to-ones {
+            animation: splitToOnes 1.0s cubic-bezier(0.25, 1, 0.5, 1) both;
+        }
+        @keyframes splitToOnes {
+            0% { transform: translateY(-30px) scale(0.7); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        /* ブロックが1つずつ消滅する */
+        .block-disappear-slow {
+            animation: disappearSlow 1.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+        @keyframes disappearSlow {
+            0% { transform: scale(1); opacity: 1; filter: none; }
+            15% { transform: scale(1.1); opacity: 0.4; background-color: #f43f5e; border-color: #e11d48; }
+            30% { transform: scale(1.15); opacity: 1; background-color: #f43f5e; border-color: #e11d48; }
+            60% { transform: scale(1.15); opacity: 1; background-color: #f43f5e; border-color: #e11d48; }
+            100% { transform: scale(0); opacity: 0; width: 0; margin: 0; padding: 0; border: none; }
+        }
+
+        /* 10のわく */
+        .ten-frame-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 4px;
+            padding: 6px;
+            border: 3px dashed #f59e0b;
+            background-color: #fffbeb;
+            border-radius: 16px;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+        }
+
+        .empty-slot {
+            width: 32px;
+            height: 32px;
+            border: 2px dashed #fcd34d;
+            border-radius: 8px;
+            background-color: #fef3c7;
+        }
+
+        @media (min-width: 640px) {
+            .empty-slot {
+                width: 38px;
+                height: 38px;
+            }
+        }
+
+        /* 3Dカードフリップ演出 */
+        @keyframes flipBlockAnim {
+            0% { transform: rotateY(0deg) scale(1); }
+            50% { transform: rotateY(90deg) scale(1.2); }
+            100% { transform: rotateY(180deg) scale(1); }
+        }
+        .flip-block-inner {
+            transform-style: preserve-3d;
+            animation: flipBlockAnim 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+        .backface-hidden {
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+
+        /* 点滅アニメーション */
+        .blink-pulse {
+            animation: blinkPulse 0.8s infinite alternate;
+        }
+        @keyframes blinkPulse {
+            0% { opacity: 1; transform: scale(1); border-color: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+            100% { opacity: 0.3; transform: scale(0.92); border-color: #f43f5e; box-shadow: none; }
+        }
+
+        .key-btn:active {
+            transform: scale(0.92);
+        }
+
+        .hanamaru-spin {
+            animation: hanamaruAnim 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes hanamaruAnim {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            80% { transform: scale(1.2) rotate(15deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .shake-anim {
+            animation: shake 0.4s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            animation: confettiFall 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes confettiFall {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(var(--dx), var(--dy)) rotate(450deg); opacity: 0; }
+        }
+
+        .collide-up-disappear {
+            animation: collideUpDisappear 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        @keyframes collideUpDisappear {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            45% { transform: translateY(-32px) scale(1.1); opacity: 1; background-color: #f43f5e; border-color: #e11d48; }
+            65% { transform: translateY(-36px) scale(1.2); opacity: 0.9; background-color: #e11d48; }
+            100% { transform: translateY(-36px) scale(0); opacity: 0; }
+        }
+
+        .hit-disappear {
+            animation: hitDisappear 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        @keyframes hitDisappear {
+            0% { transform: scale(1); opacity: 1; }
+            45% { transform: scale(1); opacity: 1; }
+            65% { transform: scale(1.2); opacity: 0.9; background-color: #f43f5e; border-color: #e11d48; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between text-slate-800 select-none">
+
+    <header class="bg-emerald-500 text-white shadow-sm px-3 py-2 flex-shrink-0 z-20">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="goHome()">
+                <div class="bg-white text-emerald-600 w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-lg shadow-sm">
+                    ＋
+                </div>
+                <h1 class="text-lg sm:text-xl font-extrabold tracking-wide">たしざん・ひきざん</h1>
+            </div>
+            <button id="homeBtn" onclick="goHome()" class="hidden bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-3 py-1 rounded-full text-xs sm:text-sm font-bold flex items-center space-x-1 transition shadow-xs">
+                <i class="fa-solid fa-house"></i>
+                <span>もどる</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto w-full px-3 py-2 flex-grow flex flex-col justify-center overflow-hidden min-h-0">
+
+        <!-- スタート画面 -->
+        <section id="startScreen" class="bg-white rounded-3xl p-3 sm:p-5 shadow-xl border-4 border-emerald-200 pop-in flex flex-col justify-between max-h-full overflow-y-auto">
+            <div class="text-center mb-2">
+                <span class="inline-block bg-emerald-100 text-emerald-700 font-extrabold px-3 py-1 rounded-full text-xs">
+                    しょうがっこう 1ねんせい
+                </span>
+                <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800 mt-1">コースを えらぼう！</h2>
+            </div>
+
+            <!-- モード設定 -->
+            <div class="mb-3">
+                <label class="block text-xs font-bold text-slate-600 mb-1.5 text-center">
+                    <i class="fa-solid fa-clock"></i> じかんの せいげん（モード）
+                </label>
+                <div class="grid grid-cols-3 gap-2 max-w-md mx-auto">
+                    <button type="button" onclick="selectMode('easy')" id="mode-easy" class="mode-btn border-2 border-emerald-400 bg-emerald-50 text-emerald-800 py-1.5 sm:py-2 px-1 rounded-xl font-extrabold text-center hover:bg-emerald-100 transition shadow-xs">
+                        <div class="text-xs sm:text-base">イージー</div>
+                        <div class="text-[10px] font-normal text-emerald-600">むせいげん</div>
+                    </button>
+                    <button type="button" onclick="selectMode('normal')" id="mode-normal" class="mode-btn border-2 border-slate-200 bg-white text-slate-600 py-1.5 sm:py-2 px-1 rounded-xl font-extrabold text-center hover:bg-slate-50 transition shadow-xs">
+                        <div class="text-xs sm:text-base">ノーマル</div>
+                        <div class="text-[10px] font-normal text-slate-500">1もん 15びょう</div>
+                    </button>
+                    <button type="button" onclick="selectMode('hard')" id="mode-hard" class="mode-btn border-2 border-slate-200 bg-white text-slate-600 py-1.5 sm:py-2 px-1 rounded-xl font-extrabold text-center hover:bg-slate-50 transition shadow-xs">
+                        <div class="text-xs sm:text-base">ハード</div>
+                        <div class="text-[10px] font-normal text-slate-500">1もん 8びょう</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- レベル選択 (2列グリッドでスクロール防止) -->
+            <div class="mb-3">
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="font-bold text-slate-700 text-xs sm:text-sm">
+                        <i class="fa-solid fa-layer-group text-emerald-500"></i> えんしゅう レベル
+                    </label>
+                    <div class="space-x-1">
+                        <button onclick="selectAllLevels(true)" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded-lg font-bold">ぜんぶ選ぶ</button>
+                        <button onclick="selectAllLevels(false)" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded-lg font-bold">解除</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="levelCheckboxList">
+                    <label class="flex items-center p-2 rounded-xl border-2 border-slate-200 hover:border-emerald-300 bg-slate-50 cursor-pointer transition">
+                        <input type="checkbox" value="1" class="level-cb w-4 h-4 text-emerald-600 rounded focus:ring-emerald-400 flex-shrink-0" checked>
+                        <div class="ml-2.5 min-w-0">
+                            <div class="font-extrabold text-slate-800 text-xs sm:text-sm truncate">レベル1：10までの 計算</div>
+                            <div class="text-[10px] text-slate-500 truncate">くりあがり・さがり なし (3+4, 8-2)</div>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-2 rounded-xl border-2 border-slate-200 hover:border-emerald-300 bg-slate-50 cursor-pointer transition">
+                        <input type="checkbox" value="2" class="level-cb w-4 h-4 text-emerald-600 rounded focus:ring-emerald-400 flex-shrink-0">
+                        <div class="ml-2.5 min-w-0">
+                            <div class="font-extrabold text-slate-800 text-xs sm:text-sm truncate">レベル2：くりあがり たしざん</div>
+                            <div class="text-[10px] text-slate-500 truncate">20までの たしざん (8+5)</div>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-2 rounded-xl border-2 border-slate-200 hover:border-emerald-300 bg-slate-50 cursor-pointer transition">
+                        <input type="checkbox" value="3" class="level-cb w-4 h-4 text-emerald-600 rounded focus:ring-emerald-400 flex-shrink-0">
+                        <div class="ml-2.5 min-w-0">
+                            <div class="font-extrabold text-slate-800 text-xs sm:text-sm truncate">レベル3：くりさがり ひきざん</div>
+                            <div class="text-[10px] text-slate-500 truncate">10だいの ひきざん (13-5)</div>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-2 rounded-xl border-2 border-slate-200 hover:border-emerald-300 bg-slate-50 cursor-pointer transition">
+                        <input type="checkbox" value="4" class="level-cb w-4 h-4 text-emerald-600 rounded focus:ring-emerald-400 flex-shrink-0">
+                        <div class="ml-2.5 min-w-0">
+                            <div class="font-extrabold text-slate-800 text-xs sm:text-sm truncate">レベル4：おおきい かず</div>
+                            <div class="text-[10px] text-slate-500 truncate">なんじゅう＋なん (20+3, 35-5)</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- スタートボタン -->
+            <button onclick="startQuiz()" class="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-extrabold text-lg py-2.5 sm:py-3 rounded-2xl shadow-md transition transform active:scale-98 flex items-center justify-center space-x-2">
+                <span>スタート！</span>
+                <i class="fa-solid fa-play"></i>
+            </button>
+        </section>
+
+        <!-- クイズ画面（PC横長画面では左右2カラム、スマホでは1カラムに自動変化） -->
+        <section id="quizScreen" class="hidden flex flex-col h-full justify-between gap-2 min-h-0">
+            
+            <!-- 上部ステータスバー -->
+            <div class="bg-white rounded-xl p-2 shadow-sm border border-slate-200 flex justify-between items-center flex-shrink-0">
+                <div class="flex items-center space-x-2">
+                    <span id="currentLevelBadge" class="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-2.5 py-0.5 rounded-full">
+                        レベル1
+                    </span>
+                    <span id="questionCount" class="font-extrabold text-slate-700 text-xs sm:text-sm">
+                        だい 1 / 5 もん
+                    </span>
+                </div>
+                <div id="timerContainer" class="hidden flex items-center space-x-1 text-amber-600 font-extrabold bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 text-xs sm:text-sm">
+                    <i class="fa-solid fa-stopwatch"></i>
+                    <span id="timerText">15</span>びょう
+                </div>
+            </div>
+
+            <!-- メインコンテンツエリア：PCでは横並び(grid-cols-2)、スマホでは縦積み -->
+            <div class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4 items-center justify-center min-h-0 overflow-hidden">
+                
+                <!-- 左側: 問題カード & 答え欄 -->
+                <div class="bg-white rounded-3xl p-3 sm:p-5 shadow-lg border-4 border-emerald-200 text-center relative flex flex-col justify-between h-full max-h-full pop-in">
+                    
+                    <div class="flex-grow flex flex-col items-center justify-center my-auto">
+                        <!-- 数式表示 -->
+                        <div id="mathContainer" class="text-3xl sm:text-5xl font-extrabold text-slate-800 my-1 py-1 flex items-center justify-center min-h-[50px] sm:min-h-[70px]">
+                        </div>
+
+                        <!-- 回答入力枠 -->
+                        <div class="mt-2 flex justify-center items-center space-x-2">
+                            <span class="text-slate-500 text-xs sm:text-sm font-bold">こたえ：</span>
+                            <div id="answerBox" class="w-24 h-12 sm:w-28 sm:h-14 bg-amber-50 border-3 border-dashed border-amber-400 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-extrabold text-amber-900 tracking-widest shadow-inner">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ヒントボタン -->
+                    <div class="flex justify-end pt-2 flex-shrink-0">
+                        <button onclick="showStepHelp()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-extrabold text-xs px-3 py-1.5 rounded-xl transition flex items-center space-x-1 shadow-xs">
+                            <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                            <span>ヒントをみる</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 右側: ソフトテンキー -->
+                <div class="bg-slate-200 p-2.5 sm:p-4 rounded-3xl shadow-md border-2 border-slate-300 flex flex-col justify-center h-full max-h-full">
+                    <div class="grid grid-cols-3 gap-1.5 sm:gap-2.5 max-w-xs mx-auto w-full my-auto">
+                        <button onclick="pressKey('1')" class="key-btn bg-white hover:bg-slate-50 active:bg-slate-200 text-slate-800 font-extrabold text-xl sm:text-2xl py-2 sm:py-3 rounded-xl shadow border-b-3 border-slate-300">1</button>
+                        <button onclick="pressKey('2')" class="key-btn bg-white hover:bg-slate-50 active:bg-slate-200 text-slate-800 font-extrabold text-xl sm:text-2xl py-2 sm:py-3 rounded-xl shadow border-b-3 border-slate-300">2</button>
+                        <button onclick="pressKey('3')" class="key-btn bg-white hover:bg-slate-50 active:bg-slate-200 text-slate-800 font-extrabold text-xl sm:text-2xl py-2 sm:py-3 rounded-xl shadow border-b-3 border-slate-300">3</button>
+                        
+                        <button onclick="pressKey('4')" class="key-btn bg-white hover:bg-slate-50 active:bg-slate-200 text-slate-800 font-extrabold text-xl sm:text-2xl py-2 sm:py-3 rounded-xl shadow border-b-3 border-slate-300">4</button>
+                        <button onclick="pressKey('5')" class="key-btn bg-white hover:bg-slate-50 active:bg-slate-200 text-slate-800 font-extrabold text-xl sm:text-2xl py-2 sm:py-3 rounded-xl shadow border-b-3 border-slate-300">5</button>
+                        <button onclick="pressKey('6')" class="key-btn bg-white hover:bg-slate-50 active:bg-slate-200 text-slate-800 font-extrabold text-xl sm:text-2xl py-2 sm:py-3 rounded-xl shadow border-b-3 border-slate-300">6</button>
+                        
+                        <button onclick="pressKey('7')" class="key-btn bg-white hover:bg-slate-50 active:bg-slate-200 text-slate-800 font-extrabold text-xl sm:text-2xl py-2 sm:py-3 rounded-xl shadow border-b-3 border-slate-300">7</button>
+                        <button onclick="pressKey('8')" class="key-btn bg-white hover:bg-slate-50 active:bg-slate-200 text-slate-800 font-extrabold text-xl sm:text-2xl py-2 sm:py-3 rounded-xl shadow border-b-3 border-slate-300">8</button>
+                        <button onclick="pressKey('9')" class="key-btn bg-white hover:bg-slate-50 active:bg-slate-200 text-slate-800 font-extrabold text-xl sm:text-2xl py-2 sm:py-3 rounded-xl shadow border-b-3 border-slate-300">9</button>
+
+                        <button onclick="clearAnswer()" class="key-btn bg-rose-100 hover:bg-rose-200 active:bg-rose-300 text-rose-700 font-extrabold text-xs sm:text-sm py-2 sm:py-3 rounded-xl shadow border-b-3 border-rose-300">けす</button>
+                        <button onclick="pressKey('0')" class="key-btn bg-white hover:bg-slate-50 active:bg-slate-200 text-slate-800 font-extrabold text-xl sm:text-2xl py-2 sm:py-3 rounded-xl shadow border-b-3 border-slate-300">0</button>
+                        <button onclick="submitAnswer()" class="key-btn bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm py-2 sm:py-3 rounded-xl shadow border-b-3 border-emerald-700">こたえ</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 結果画面 -->
+        <section id="resultScreen" class="hidden bg-white rounded-3xl p-4 sm:p-6 shadow-xl border-4 border-emerald-200 text-center pop-in my-auto">
+            <div class="mb-3">
+                <span id="resultEmoji" class="text-5xl sm:text-6xl inline-block bounce-animation mb-1">🎉</span>
+                <h2 id="resultTitle" class="text-xl sm:text-2xl font-extrabold text-slate-800">すごーい！ぜんもんせいかい！</h2>
+            </div>
+
+            <div class="bg-emerald-50 rounded-2xl p-4 mb-4 border-2 border-emerald-100">
+                <div class="text-slate-600 font-bold text-xs sm:text-sm mb-1">せいかいした すう</div>
+                <div class="text-3xl sm:text-4xl font-extrabold text-emerald-600">
+                    <span id="scoreText">5</span> / 5 もん
+                </div>
+            </div>
+
+            <div class="space-y-2 max-w-xs mx-auto">
+                <button onclick="startQuiz()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-base py-3 rounded-xl shadow-md transition">
+                    もういちど チャレンジ！
+                </button>
+                <button onclick="goHome()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-sm py-2.5 rounded-xl transition">
+                    コースの えらびなおし
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 正解/不正解 オーバーレイ -->
+    <div id="feedbackOverlay" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div id="feedbackCard" class="bg-white rounded-3xl p-5 max-w-xs w-full text-center shadow-2xl border-4 relative overflow-hidden flex flex-col items-center justify-center min-h-[220px]">
+            <div id="confettiContainer" class="absolute inset-0 pointer-events-none"></div>
+            <div id="feedbackIcon" class="text-6xl mb-1">💮</div>
+            <div id="feedbackTitle" class="text-2xl font-black tracking-wider mb-1">大せいかい！</div>
+            <div id="feedbackSub" class="text-xs font-extrabold text-slate-500">そのちょうし！</div>
+        </div>
+    </div>
+
+    <!-- ヒントステップ モーダル -->
+    <div id="stepModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3">
+        <div class="bg-white rounded-3xl max-w-md w-full p-4 shadow-2xl border-4 border-amber-300 flex flex-col justify-between max-h-[95dvh] overflow-y-auto pop-in">
+            
+            <div>
+                <!-- ヘッダー -->
+                <div class="flex justify-between items-center mb-2 pb-1.5 border-b-2 border-slate-100">
+                    <span class="bg-amber-100 text-amber-800 font-extrabold text-xs px-2.5 py-0.5 rounded-full">
+                        ヒント (<span id="stepCurrentNum">1</span>/<span id="stepTotalNum">3</span>)
+                    </span>
+                    <button onclick="closeStepModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg px-2">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- 問題式表示エリア -->
+                <div class="bg-amber-50 border border-amber-200 rounded-xl py-1.5 px-3 mb-2 text-center shadow-xs">
+                    <div class="text-[10px] font-extrabold text-amber-700 tracking-wider">いまの もんだい</div>
+                    <div id="stepMathHeader" class="text-xl sm:text-2xl font-extrabold text-slate-800"></div>
+                </div>
+
+                <!-- 解説コンテンツ -->
+                <div id="stepContentContainer" class="min-h-[180px] sm:min-h-[200px] flex flex-col justify-center items-center text-center p-1">
+                </div>
+            </div>
+
+            <!-- フッターコントロール -->
+            <div class="flex justify-between items-center mt-3 pt-2 border-t-2 border-slate-100">
+                <button id="stepPrevBtn" onclick="changeStep(-1)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold px-3 py-1.5 rounded-xl transition text-xs">
+                    <i class="fa-solid fa-chevron-left"></i> もどる
+                </button>
+
+                <button onclick="closeStepModal()" class="text-slate-500 font-bold text-xs hover:underline">
+                    とじる
+                </button>
+
+                <button id="stepNextBtn" onclick="changeStep(1)" class="bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold px-4 py-1.5 rounded-xl transition text-xs shadow-xs">
+                    すすめ <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center text-[10px] text-slate-400 py-1 flex-shrink-0">
+        小学校1年生 算数学習 Webアプリ
+    </footer>
+
+    <script>
+        let currentMode = 'easy';
+        let selectedLevels = [1];
+        let quizQueue = [];
+        let currentQuestionIndex = 0;
+        let currentQuestion = null;
+        let userInputValue = "";
+        let correctCount = 0;
+        let timerId = null;
+        let timerSeconds = 15;
+        let currentStepIndex = 0;
+        let currentStepsData = [];
+        let isAutoStepAfterWrong = false;
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.frequency.setValueAtTime(400, now);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+                osc.start(now);
+                osc.stop(now + 0.04);
+            } else if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.1);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'incorrect') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'fanfare') {
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const noteOsc = audioCtx.createOscillator();
+                    const noteGain = audioCtx.createGain();
+                    noteOsc.connect(noteGain);
+                    noteGain.connect(audioCtx.destination);
+                    noteOsc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    noteGain.gain.setValueAtTime(0.12, now + idx * 0.08);
+                    noteGain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
+                    noteOsc.start(now + idx * 0.08);
+                    noteOsc.stop(now + idx * 0.08 + 0.2);
+                });
+            }
+        }
+
+        function selectMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('border-emerald-400', 'bg-emerald-50', 'text-emerald-800');
+                btn.classList.add('border-slate-200', 'bg-white', 'text-slate-600');
+            });
+            const activeBtn = document.getElementById(`mode-${mode}`);
+            activeBtn.classList.remove('border-slate-200', 'bg-white', 'text-slate-600');
+            activeBtn.classList.add('border-emerald-400', 'bg-emerald-50', 'text-emerald-800');
+            playSound('click');
+        }
+
+        function selectAllLevels(selectAll) {
+            document.querySelectorAll('.level-cb').forEach(cb => {
+                cb.checked = selectAll;
+            });
+            playSound('click');
+        }
+
+        function goHome() {
+            clearInterval(timerId);
+            document.getElementById('startScreen').classList.remove('hidden');
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('homeBtn').classList.add('hidden');
+            playSound('click');
+        }
+
+        function startQuiz() {
+            selectedLevels = Array.from(document.querySelectorAll('.level-cb:checked')).map(cb => parseInt(cb.value));
+            if (selectedLevels.length === 0) {
+                alert("レベルを 1ついじょう えらんでね！");
+                return;
+            }
+
+            quizQueue = [];
+            for (let i = 0; i < 5; i++) {
+                const lvl = selectedLevels[Math.floor(Math.random() * selectedLevels.length)];
+                quizQueue.push(generateQuestion(lvl));
+            }
+
+            currentQuestionIndex = 0;
+            correctCount = 0;
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+            document.getElementById('homeBtn').classList.remove('hidden');
+
+            loadNextQuestion();
+            playSound('click');
+        }
+
+        function generateQuestion(level) {
+            let num1, num2, operator, answer;
+
+            if (level === 1) {
+                operator = Math.random() < 0.5 ? '+' : '-';
+                if (operator === '+') {
+                    num1 = Math.floor(Math.random() * 9) + 1;
+                    num2 = Math.floor(Math.random() * (10 - num1)) + 1;
+                    answer = num1 + num2;
+                } else {
+                    num1 = Math.floor(Math.random() * 9) + 2;
+                    num2 = Math.floor(Math.random() * (num1 - 1)) + 1;
+                    answer = num1 - num2;
+                }
+            } else if (level === 2) {
+                operator = '+';
+                num1 = Math.floor(Math.random() * 8) + 2;
+                const minNum2 = 10 - num1 + 1;
+                num2 = Math.floor(Math.random() * (10 - minNum2)) + minNum2;
+                answer = num1 + num2;
+            } else if (level === 3) {
+                operator = '-';
+                const ones = Math.floor(Math.random() * 8) + 1;
+                num1 = 10 + ones;
+                num2 = Math.floor(Math.random() * (9 - ones)) + (ones + 1);
+                answer = num1 - num2;
+            } else if (level === 4) {
+                const type = Math.floor(Math.random() * 4);
+                if (type === 0) {
+                    num1 = (Math.floor(Math.random() * 8) + 1) * 10;
+                    num2 = Math.floor(Math.random() * 9) + 1;
+                    operator = '+';
+                    answer = num1 + num2;
+                } else if (type === 1) {
+                    num1 = Math.floor(Math.random() * 9) + 1;
+                    num2 = (Math.floor(Math.random() * 8) + 1) * 10;
+                    operator = '+';
+                    answer = num1 + num2;
+                } else if (type === 2) {
+                    const tens = (Math.floor(Math.random() * 8) + 1) * 10;
+                    const ones = Math.floor(Math.random() * 8) + 1;
+                    num1 = tens + ones;
+                    num2 = ones;
+                    operator = '-';
+                    answer = num1 - num2;
+                } else {
+                    const tens = (Math.floor(Math.random() * 7) + 2) * 10;
+                    const ones = Math.floor(Math.random() * 9) + 1;
+                    num1 = tens + ones;
+                    num2 = tens;
+                    operator = '-';
+                    answer = num1 - num2;
+                }
+            }
+
+            return { level, num1, num2, operator, answer };
+        }
+
+        function loadNextQuestion() {
+            if (currentQuestionIndex >= quizQueue.length) {
+                showResultScreen();
+                return;
+            }
+
+            currentQuestion = quizQueue[currentQuestionIndex];
+            userInputValue = "";
+            updateAnswerBox();
+
+            document.getElementById('currentLevelBadge').innerText = `レベル ${currentQuestion.level}`;
+            document.getElementById('questionCount').innerText = `だい ${currentQuestionIndex + 1} / ${quizQueue.length} もん`;
+
+            const opSymbol = currentQuestion.operator === '+' ? '+' : '-';
+            const katexString = String.raw`${currentQuestion.num1} ${opSymbol} ${currentQuestion.num2} = \square`;
+            katex.render(katexString, document.getElementById('mathContainer'), {
+                throwOnError: false,
+                displayMode: true
+            });
+
+            clearInterval(timerId);
+            const timerContainer = document.getElementById('timerContainer');
+            if (currentMode === 'easy') {
+                timerContainer.classList.add('hidden');
+            } else {
+                timerContainer.classList.remove('hidden');
+                timerSeconds = currentMode === 'normal' ? 15 : 8;
+                document.getElementById('timerText').innerText = timerSeconds;
+                
+                timerId = setInterval(() => {
+                    timerSeconds--;
+                    document.getElementById('timerText').innerText = timerSeconds;
+                    if (timerSeconds <= 0) {
+                        clearInterval(timerId);
+                        playSound('incorrect');
+                        showAnswerFeedback(false);
+                    }
+                }, 1000);
+            }
+        }
+
+        function pressKey(num) {
+            if (userInputValue.length < 2) {
+                userInputValue += num;
+                updateAnswerBox();
+                playSound('click');
+            }
+        }
+
+        function clearAnswer() {
+            userInputValue = "";
+            updateAnswerBox();
+            playSound('click');
+        }
+
+        function updateAnswerBox() {
+            document.getElementById('answerBox').innerText = userInputValue;
+        }
+
+        function submitAnswer() {
+            if (userInputValue === "") return;
+
+            clearInterval(timerId);
+            const userNum = parseInt(userInputValue, 10);
+            const isCorrect = (userNum === currentQuestion.answer);
+
+            showAnswerFeedback(isCorrect);
+        }
+
+        /* PCの物理キーボード入力対応 */
+        window.addEventListener('keydown', (e) => {
+            const quizScreen = document.getElementById('quizScreen');
+            if (quizScreen.classList.contains('hidden')) return;
+
+            if (e.key >= '0' && e.key <= '9') {
+                pressKey(e.key);
+            } else if (e.key === 'Backspace' || e.key === 'Delete') {
+                clearAnswer();
+            } else if (e.key === 'Enter') {
+                submitAnswer();
+            }
+        });
+
+        function showAnswerFeedback(isCorrect) {
+            const overlay = document.getElementById('feedbackOverlay');
+            const card = document.getElementById('feedbackCard');
+            const icon = document.getElementById('feedbackIcon');
+            const title = document.getElementById('feedbackTitle');
+            const sub = document.getElementById('feedbackSub');
+            const confettiContainer = document.getElementById('confettiContainer');
+
+            confettiContainer.innerHTML = '';
+            overlay.classList.remove('hidden');
+
+            if (isCorrect) {
+                correctCount++;
+                playSound('correct');
+
+                const praises = ["大せいかい！", "すごーい！", "てんさい！", "やったね！", "パーフェクト！"];
+                const subs = ["そのちょうし！", "すごすぎるよ！", "バッチリ！", "つぎも がんばろう！"];
+                const randPraise = praises[Math.floor(Math.random() * praises.length)];
+                const randSub = subs[Math.floor(Math.random() * subs.length)];
+
+                card.className = "bg-white rounded-3xl p-5 max-w-xs w-full text-center shadow-2xl border-4 border-amber-400 relative overflow-hidden flex flex-col items-center justify-center min-h-[220px] pop-in";
+                icon.innerText = "💮";
+                icon.className = "text-6xl mb-1 hanamaru-spin text-rose-500 drop-shadow";
+                title.innerText = randPraise;
+                title.className = "text-2xl font-extrabold text-amber-500 tracking-wider bounce-animation";
+                sub.innerText = randSub;
+
+                for (let i = 0; i < 20; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.backgroundColor = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'][i % 6];
+                    confetti.style.left = '50%';
+                    confetti.style.top = '40%';
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 60 + Math.random() * 90;
+                    confetti.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+                    confetti.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
+                    confettiContainer.appendChild(confetti);
+                }
+
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    currentQuestionIndex++;
+                    loadNextQuestion();
+                }, 1300);
+
+            } else {
+                playSound('incorrect');
+
+                card.className = "bg-white rounded-3xl p-5 max-w-xs w-full text-center shadow-2xl border-4 border-sky-300 relative overflow-hidden flex flex-col items-center justify-center min-h-[220px] shake-anim";
+                icon.innerText = "💡";
+                icon.className = "text-6xl mb-1 bounce-animation";
+                title.innerText = "おしい！";
+                title.className = "text-2xl font-extrabold text-sky-600 tracking-wider";
+                sub.innerText = `せいかいは ${currentQuestion.answer} だよ！`;
+
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    isAutoStepAfterWrong = true;
+                    showStepHelp();
+                }, 1300);
+            }
+        }
+
+        function createBlockElement(type, text = "", extraClass = "", delaySec = 0) {
+            const colorClass = type === 'red' 
+                ? 'bg-rose-500 border-rose-600 text-white' 
+                : type === 'blue' 
+                ? 'bg-sky-500 border-sky-600 text-white'
+                : 'bg-emerald-500 border-emerald-600 text-white';
+            
+            const delayStyle = delaySec > 0 ? `style="animation-delay: ${delaySec}s; animation-fill-mode: both;"` : '';
+
+            return `<div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg shadow-sm border-b-3 flex items-center justify-center font-extrabold text-xs sm:text-sm ${colorClass} ${extraClass}" ${delayStyle}>${text}</div>`;
+        }
+
+        function createFlipBlock(frontType, backType, num, delaySec, frontText = "") {
+            const frontColor = frontType === 'red' 
+                ? 'bg-rose-500 border-rose-600 text-white' 
+                : frontType === 'blue' 
+                ? 'bg-sky-500 border-sky-600 text-white'
+                : 'bg-emerald-500 border-emerald-600 text-white';
+
+            const backColor = backType === 'red' 
+                ? 'bg-rose-500 border-rose-600 text-white' 
+                : backType === 'blue' 
+                ? 'bg-sky-500 border-sky-600 text-white'
+                : 'bg-amber-500 border-amber-600 text-white';
+
+            return `
+                <div class="inline-block w-8 h-8 sm:w-9 sm:h-9" style="perspective: 600px;">
+                    <div class="flip-block-inner relative w-full h-full text-center" style="animation-delay: ${delaySec}s; animation-fill-mode: both;">
+                        <div class="backface-hidden absolute inset-0 w-full h-full rounded-lg shadow-xs border-b-3 flex items-center justify-center font-extrabold text-xs ${frontColor}">
+                            ${frontText}
+                        </div>
+                        <div class="backface-hidden absolute inset-0 w-full h-full rounded-lg shadow-xs border-b-3 flex items-center justify-center font-extrabold text-xs sm:text-sm ${backColor}" style="transform: rotateY(180deg);">
+                            ${num}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function buildSteps(q) {
+            const steps = [];
+
+            if (q.level === 1) {
+                if (q.operator === '+') {
+                    let blocks1 = '';
+                    for (let i = 0; i < q.num1; i++) {
+                        blocks1 += createBlockElement('red', '', 'pop-in');
+                    }
+                    steps.push({
+                        title: `あかい ブロックが ${q.num1}こ`,
+                        html: `<div class="flex flex-wrap justify-center gap-1.5 max-w-xs my-2">${blocks1}</div>`
+                    });
+
+                    let blocksCombined = '';
+                    for (let i = 0; i < q.num1; i++) {
+                        blocksCombined += createBlockElement('red', '');
+                    }
+                    for (let i = 0; i < q.num2; i++) {
+                        const delay = i * 1.0;
+                        blocksCombined += createBlockElement('blue', '', 'slide-in-right-slow', delay);
+                    }
+                    steps.push({
+                        title: `あおい ブロックが スーッ！`,
+                        html: `<div class="flex flex-wrap justify-center gap-1.5 max-w-xs my-2 p-2 bg-emerald-50 border border-emerald-200 rounded-xl">${blocksCombined}</div>`
+                    });
+
+                    let blocksCounted = '';
+                    for (let i = 0; i < q.answer; i++) {
+                        const isRed = i < q.num1;
+                        const delay = i * 0.8;
+                        const frontType = isRed ? 'red' : 'blue';
+                        blocksCounted += createFlipBlock(frontType, 'amber', i + 1, delay, '');
+                    }
+                    steps.push({
+                        title: `1つずつ ひっくりかえるよ`,
+                        html: `<div class="flex flex-wrap justify-center gap-1.5 max-w-xs my-2">${blocksCounted}</div>`
+                    });
+
+                    let blocksFinal = '';
+                    for (let i = 0; i < q.answer; i++) {
+                        blocksFinal += createBlockElement('amber', `${i + 1}`, 'pop-in');
+                    }
+                    steps.push({
+                        title: `ぜんぶで ${q.answer} こ！`,
+                        html: `
+                            <div class="flex flex-wrap justify-center gap-1.5 max-w-xs my-2">${blocksFinal}</div>
+                            <div class="mt-2 text-2xl font-extrabold text-emerald-600">
+                                こたえは <span class="text-4xl text-rose-600 font-black">${q.answer}</span>
+                            </div>
+                        `
+                    });
+
+                } else {
+                    let blocksStart = '';
+                    for (let i = 0; i < q.num1; i++) {
+                        blocksStart += createBlockElement('red', '', 'pop-in');
+                    }
+                    steps.push({
+                        title: `ブロックが ${q.num1}こ`,
+                        html: `<div class="flex flex-wrap justify-center gap-1.5 max-w-xs my-2">${blocksStart}</div>`
+                    });
+
+                    let blocksBlinking = '';
+                    for (let i = 0; i < q.num1; i++) {
+                        if (i < q.answer) {
+                            blocksBlinking += createBlockElement('red', '');
+                        } else {
+                            blocksBlinking += createBlockElement('red', '', 'blink-pulse');
+                        }
+                    }
+                    steps.push({
+                        title: `ひく ${q.num2}こ が ピカピカ！`,
+                        html: `<div class="flex flex-wrap justify-center gap-1.5 max-w-xs my-2 p-2 bg-amber-50 border border-amber-200 rounded-xl">${blocksBlinking}</div>`
+                    });
+
+                    let blocksSubbing = '';
+                    for (let i = 0; i < q.num1; i++) {
+                        if (i < q.answer) {
+                            blocksSubbing += createBlockElement('red', '');
+                        } else {
+                            const disappearIdx = i - q.answer;
+                            const delay = disappearIdx * 1.0;
+                            blocksSubbing += createBlockElement('red', '', 'block-disappear-slow', delay);
+                        }
+                    }
+                    steps.push({
+                        title: `1つずつ ポフッ…`,
+                        html: `<div class="flex flex-wrap justify-center gap-1.5 max-w-xs my-2 p-2 bg-rose-50 border border-rose-200 rounded-xl min-h-[50px]">${blocksSubbing}</div>`
+                    });
+
+                    let blocksRemaining = '';
+                    for (let i = 0; i < q.answer; i++) {
+                        const delay = i * 0.8;
+                        blocksRemaining += createFlipBlock('red', 'emerald', i + 1, delay, '');
+                    }
+                    steps.push({
+                        title: `のこりを ひっくりかえすよ`,
+                        html: `<div class="flex flex-wrap justify-center gap-1.5 max-w-xs my-2">${blocksRemaining}</div>`
+                    });
+
+                    let blocksFinalSub = '';
+                    for (let i = 0; i < q.answer; i++) {
+                        blocksFinalSub += createBlockElement('emerald', `${i + 1}`, 'pop-in');
+                    }
+                    steps.push({
+                        title: `のこりは ${q.answer} こ！`,
+                        html: `
+                            <div class="flex flex-wrap justify-center gap-1.5 max-w-xs my-2">${blocksFinalSub}</div>
+                            <div class="mt-2 text-2xl font-extrabold text-emerald-600">
+                                こたえは <span class="text-4xl text-rose-600 font-black">${q.answer}</span>
+                            </div>
+                        `
+                    });
+                }
+
+            } else if (q.level === 2) {
+                const needFor10 = 10 - q.num1;
+                const rest = q.num2 - needFor10;
+
+                let slotsStep1 = '';
+                for (let i = 0; i < 10; i++) {
+                    if (i < q.num1) {
+                        slotsStep1 += createBlockElement('red', '');
+                    } else {
+                        slotsStep1 += `<div class="empty-slot"></div>`;
+                    }
+                }
+                let allBlueBlocksStep1 = '';
+                for (let i = 0; i < q.num2; i++) {
+                    allBlueBlocksStep1 += createBlockElement('blue', '');
+                }
+
+                steps.push({
+                    title: `10の わくと あおい ブロック (${q.num2}こ)`,
+                    html: `
+                        <div class="flex flex-col items-center space-y-2 my-1">
+                            <div class="ten-frame-grid">${slotsStep1}</div>
+                            <div class="text-xs font-extrabold text-sky-600">＋ したの あおい ブロック (${q.num2}こ)</div>
+                            <div class="flex gap-1.5 flex-wrap justify-center max-w-xs p-2 bg-sky-50 border border-sky-200 rounded-xl">${allBlueBlocksStep1}</div>
+                        </div>
+                    `
+                });
+
+                let slotsStep2 = '';
+                let moveCount = 0;
+                for (let i = 0; i < 10; i++) {
+                    if (i < q.num1) {
+                        slotsStep2 += createBlockElement('red', '');
+                    } else {
+                        const moveIdx = moveCount;
+                        const slotCol = i % 5;
+                        const startX = (moveIdx - slotCol + 2 - (q.num2 - 1) / 2) * 36;
+                        const delay = moveIdx * 1.0;
+                        
+                        slotsStep2 += `
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg shadow-xs border-b-3 flex items-center justify-center font-extrabold text-xs bg-sky-500 border-sky-600 text-white slide-to-slot" style="--start-x: ${startX}px; animation-delay: ${delay}s; animation-fill-mode: both;"></div>
+                        `;
+                        moveCount++;
+                    }
+                }
+
+                let bottomBlocksStep2 = '';
+                for (let i = 0; i < q.num2; i++) {
+                    if (i < needFor10) {
+                        bottomBlocksStep2 += `<div class="w-8 h-8 sm:w-9 sm:h-9 border-2 border-dashed border-sky-300 rounded-lg bg-sky-50/50"></div>`;
+                    } else {
+                        bottomBlocksStep2 += createBlockElement('blue', '');
+                    }
+                }
+
+                steps.push({
+                    title: `したから 1つずつ うえの わくに はいるよ！`,
+                    html: `
+                        <div class="flex flex-col items-center space-y-2 my-1">
+                            <div class="ten-frame-grid">${slotsStep2}</div>
+                            <div class="text-xs font-extrabold text-sky-700">したの ブロック (${q.num2}こ)</div>
+                            <div class="flex gap-1.5 flex-wrap justify-center max-w-xs p-2 bg-sky-50 border border-sky-200 rounded-xl">${bottomBlocksStep2}</div>
+                        </div>
+                    `
+                });
+
+                let fullSlotsStep3 = '';
+                for (let i = 0; i < 10; i++) {
+                    if (i < q.num1) {
+                        fullSlotsStep3 += createBlockElement('red', '');
+                    } else {
+                        fullSlotsStep3 += createBlockElement('blue', '');
+                    }
+                }
+
+                let restBlocksStep3 = '';
+                for (let i = 0; i < rest; i++) {
+                    restBlocksStep3 += createBlockElement('blue', '');
+                }
+
+                steps.push({
+                    title: `10の まとまり と のこりの ${rest}こ`,
+                    html: `
+                        <div class="flex flex-col items-center space-y-2 my-1">
+                            <div class="ten-frame-grid border-amber-400 bg-amber-100/80 shadow-md pop-in relative">
+                                <div class="absolute -top-2.5 -right-2.5 bg-amber-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full shadow-xs z-10">
+                                    10のまとまり！
+                                </div>
+                                ${fullSlotsStep3}
+                            </div>
+                            <div class="text-xs font-extrabold text-amber-800">＋ のこりの あおい ブロック (${rest}こ)</div>
+                            <div class="flex gap-1.5 flex-wrap justify-center max-w-xs p-2 bg-sky-50 border border-sky-200 rounded-xl">${restBlocksStep3}</div>
+                        </div>
+                    `
+                });
+
+                let flipRestBlocks = '';
+                for (let i = 0; i < rest; i++) {
+                    const delay = (i + 1) * 0.8;
+                    flipRestBlocks += createFlipBlock('blue', 'amber', 10 + (i + 1), delay, '');
+                }
+
+                steps.push({
+                    title: `1つずつ ひっくりかえして かぞえるよ`,
+                    html: `
+                        <div class="flex flex-col items-center space-y-2 my-1">
+                            <div class="inline-block" style="perspective: 600px;">
+                                <div class="flip-block-inner relative" style="animation-delay: 0s; animation-fill-mode: both;">
+                                    <div class="backface-hidden ten-frame-grid border-amber-400 bg-amber-100/80 shadow-md">
+                                        ${fullSlotsStep3}
+                                    </div>
+                                    <div class="backface-hidden absolute inset-0 w-full h-full rounded-2xl shadow-md border-b-3 flex items-center justify-center font-black text-3xl bg-amber-500 border-amber-600 text-white" style="transform: rotateY(180deg);">
+                                        10
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-xs font-extrabold text-amber-800">＋ のこりの あおい ブロック (${rest}こ)</div>
+
+                            <div class="flex gap-1.5 flex-wrap justify-center max-w-xs p-2 bg-sky-50 border border-sky-200 rounded-xl">
+                                ${flipRestBlocks}
+                            </div>
+                        </div>
+                    `
+                });
+
+                steps.push({
+                    title: `こたえの はっぴょう！`,
+                    html: `
+                        <div class="my-3 text-center">
+                            <div class="text-xl font-extrabold text-amber-800 mb-1">10 と ${rest} で</div>
+                            <div class="text-4xl font-black text-rose-600 pop-in">${q.answer}</div>
+                        </div>
+                    `
+                });
+
+            } else if (q.level === 3) {
+                const ones = q.num1 - 10;
+                const afterSub = 10 - q.num2;
+
+                let slotsStep1 = '';
+                for (let i = 0; i < 10; i++) {
+                    const delay = (i % 5) * 0.08;
+                    slotsStep1 += createBlockElement('blue', `${i + 1}`, 'split-to-ten', delay);
+                }
+                let onesStep1 = '';
+                for (let i = 0; i < ones; i++) {
+                    const delay = 0.3 + i * 0.08;
+                    onesStep1 += createBlockElement('red', `${i + 1}`, 'split-to-ones', delay);
+                }
+
+                steps.push({
+                    title: `${q.num1} を 10 と ${ones} に わけるよ！`,
+                    html: `
+                        <div class="flex flex-col items-center space-y-2 my-1">
+                            <div class="text-[11px] font-extrabold text-sky-700">うえの 10の わく に 10こ</div>
+                            <div class="ten-frame-grid">${slotsStep1}</div>
+                            <div class="text-[11px] font-extrabold text-rose-600">したに バラ の ${ones}こ</div>
+                            <div class="flex gap-1.5 flex-wrap justify-center max-w-xs p-2 bg-rose-50 border border-rose-200 rounded-xl">${onesStep1}</div>
+                        </div>
+                    `
+                });
+
+                let slotsStep2 = '';
+                for (let i = 0; i < 10; i++) {
+                    if (i < afterSub) {
+                        slotsStep2 += createBlockElement('blue', `${i + 1}`);
+                    } else {
+                        slotsStep2 += createBlockElement('blue', `${i + 1}`, 'blink-pulse');
+                    }
+                }
+                let onesStep2 = '';
+                for (let i = 0; i < ones; i++) {
+                    onesStep2 += createBlockElement('red', `${i + 1}`);
+                }
+
+                steps.push({
+                    title: `ひく ${q.num2}こ が ピカピカ！`,
+                    html: `
+                        <div class="flex flex-col items-center space-y-2 my-1">
+                            <div class="text-[11px] font-extrabold text-amber-700">これから ひく ${q.num2}こ が てんめつ するよ</div>
+                            <div class="ten-frame-grid">${slotsStep2}</div>
+                            <div class="text-[11px] font-extrabold text-rose-600">＋ バラの あかい ブロック (${ones}こ)</div>
+                            <div class="flex gap-1.5 flex-wrap justify-center max-w-xs p-2 bg-rose-50 border border-rose-200 rounded-xl">${onesStep2}</div>
+                        </div>
+                    `
+                });
+
+                let slotsStep3 = '';
+                for (let i = 0; i < 10; i++) {
+                    if (i < afterSub) {
+                        slotsStep3 += createBlockElement('blue', `${i + 1}`);
+                    } else {
+                        const disappearIdx = (10 - 1) - i; 
+                        const delay = disappearIdx * 1.0;
+                        slotsStep3 += createBlockElement('blue', `${i + 1}`, 'block-disappear-slow', delay);
+                    }
+                }
+                let onesStep3 = '';
+                for (let i = 0; i < ones; i++) {
+                    onesStep3 += createBlockElement('red', `${i + 1}`);
+                }
+
+                steps.push({
+                    title: `10から 1つずつ ひいていくよ！`,
+                    html: `
+                        <div class="flex flex-col items-center space-y-2 my-1">
+                            <div class="text-[11px] font-extrabold text-amber-700">10の わくから ぽふっ…</div>
+                            <div class="ten-frame-grid">${slotsStep3}</div>
+                            <div class="text-[11px] font-extrabold text-rose-600">＋ バラの あかい ブロック (${ones}こ)</div>
+                            <div class="flex gap-1.5 flex-wrap justify-center max-w-xs p-2 bg-rose-50 border border-rose-200 rounded-xl">${onesStep3}</div>
+                        </div>
+                    `
+                });
+
+                let flipSlotsStep4 = '';
+                for (let i = 0; i < 10; i++) {
+                    if (i < afterSub) {
+                        const delay = (i + 1) * 0.8;
+                        flipSlotsStep4 += createFlipBlock('blue', 'amber', i + 1, delay, `${i + 1}`);
+                    } else {
+                        flipSlotsStep4 += `<div class="empty-slot"></div>`;
+                    }
+                }
+                let flipOnesStep4 = '';
+                for (let i = 0; i < ones; i++) {
+                    const delay = (afterSub + i + 1) * 0.8;
+                    flipOnesStep4 += createFlipBlock('red', 'amber', afterSub + i + 1, delay, `${i + 1}`);
+                }
+
+                steps.push({
+                    title: `1つずつ ひっくりかえして かぞえるよ`,
+                    html: `
+                        <div class="flex flex-col items-center space-y-2 my-1">
+                            <div class="ten-frame-grid border-sky-400 bg-sky-50 shadow-xs relative">
+                                ${flipSlotsStep4}
+                            </div>
+                            <div class="text-[11px] font-extrabold text-rose-600">＋ バラの あかい ブロック (${ones}こ)</div>
+                            <div class="flex gap-1.5 flex-wrap justify-center max-w-xs p-2 bg-rose-50 border border-rose-200 rounded-xl">${flipOnesStep4}</div>
+                        </div>
+                    `
+                });
+
+                steps.push({
+                    title: `こたえの はっぴょう！`,
+                    html: `
+                        <div class="my-3 text-center">
+                            <div class="text-xl font-extrabold text-amber-800 mb-1">10から ひいて のこった ${afterSub} と バラの ${ones} で</div>
+                            <div class="text-4xl font-black text-rose-600 pop-in">${q.answer}</div>
+                        </div>
+                    `
+                });
+
+            } else if (q.level === 4) {
+                const tens1 = Math.floor(q.num1 / 10);
+                const ones1 = q.num1 % 10;
+                const tens2 = Math.floor(q.num2 / 10);
+                const ones2 = q.num2 % 10;
+
+                let step1HTML = `<div class="flex flex-col items-center space-y-2 my-1">`;
+                step1HTML += `<div class="bg-sky-50 border border-sky-200 rounded-xl p-2 w-full max-w-sm text-center">`;
+                step1HTML += `<div class="text-[11px] font-extrabold text-sky-700 mb-1">${q.num1} を 10のかたまり と バラ に分けるよ</div>`;
+                step1HTML += `<div class="flex items-center justify-center gap-2">`;
+                step1HTML += `<div class="text-2xl font-black text-sky-600 bg-white px-2.5 py-1 rounded-xl border border-sky-200 shadow-xs flex-shrink-0 min-w-[50px] text-center">${q.num1}</div>`;
+                step1HTML += `<i class="fa-solid fa-arrow-right text-sky-400 text-xs flex-shrink-0"></i>`;
+                step1HTML += `<div class="flex justify-center items-center gap-1 flex-wrap flex-grow">`;
+                for (let t = 0; t < tens1; t++) {
+                    step1HTML += `<div class="w-8 h-8 sm:w-9 sm:h-9 bg-sky-500 border-sky-600 text-white rounded-lg shadow-xs flex flex-col items-center justify-center font-black pop-in" style="animation-delay:${t * 0.12}s"><span class="text-[7px]">まとまり</span><span class="text-xs">10</span></div>`;
+                }
+                if (ones1 > 0) {
+                    step1HTML += `<div class="flex gap-0.5 items-center bg-white p-0.5 rounded-lg border border-rose-200">`;
+                    for (let i = 0; i < ones1; i++) {
+                        step1HTML += createBlockElement('red', '', 'split-to-ones', i * 0.06);
+                    }
+                    step1HTML += `</div>`;
+                }
+                step1HTML += `</div></div></div>`;
+
+                step1HTML += `<div class="bg-amber-50 border border-amber-200 rounded-xl p-2 w-full max-w-sm text-center">`;
+                step1HTML += `<div class="text-[11px] font-extrabold text-amber-700 mb-1">${q.num2} を 10のかたまり と バラ に分けるよ</div>`;
+                step1HTML += `<div class="flex items-center justify-center gap-2">`;
+                step1HTML += `<div class="text-2xl font-black text-amber-600 bg-white px-2.5 py-1 rounded-xl border border-amber-200 shadow-xs flex-shrink-0 min-w-[50px] text-center">${q.num2}</div>`;
+                step1HTML += `<i class="fa-solid fa-arrow-right text-amber-400 text-xs flex-shrink-0"></i>`;
+                step1HTML += `<div class="flex justify-center items-center gap-1 flex-wrap flex-grow">`;
+                for (let t = 0; t < tens2; t++) {
+                    step1HTML += `<div class="w-8 h-8 sm:w-9 sm:h-9 bg-amber-500 border-amber-600 text-white rounded-lg shadow-xs flex flex-col items-center justify-center font-black pop-in" style="animation-delay:${t * 0.12}s"><span class="text-[7px]">まとまり</span><span class="text-xs">10</span></div>`;
+                }
+                if (ones2 > 0) {
+                    step1HTML += `<div class="flex gap-0.5 items-center bg-white p-0.5 rounded-lg border border-amber-200">`;
+                    for (let i = 0; i < ones2; i++) {
+                        step1HTML += createBlockElement('amber', '', 'split-to-ones', i * 0.06);
+                    }
+                    step1HTML += `</div>`;
+                }
+                step1HTML += `</div></div></div>`;
+                step1HTML += `</div>`;
+
+                steps.push({
+                    title: `10のかたまり と 残り(バラ) に分けるよ！`,
+                    html: step1HTML
+                });
+
+                let step2HTML = `<div class="flex flex-col items-center space-y-2 my-1 w-full max-w-xs">`;
+                step2HTML += `<div class="w-full bg-emerald-50 border border-emerald-300 rounded-xl p-2 text-center pop-in">`;
+                step2HTML += `<div class="text-[10px] font-extrabold text-emerald-800 mb-1">【10のかたまり】</div>`;
+                step2HTML += `<div class="space-y-1">`;
+                step2HTML += `<div class="flex items-center justify-start gap-1 bg-white/80 p-1 rounded-lg border border-emerald-200">`;
+                step2HTML += `<span class="text-[9px] font-extrabold text-sky-700 w-10 text-left flex-shrink-0">${q.num1}:</span>`;
+                step2HTML += `<div class="flex gap-1 flex-wrap flex-grow">`;
+                for (let t = 0; t < tens1; t++) {
+                    step2HTML += `<div class="w-7 h-7 sm:w-8 sm:h-8 bg-sky-500 border-sky-600 text-white rounded-md flex flex-col items-center justify-center font-black"><span class="text-[6px]">まとまり</span><span class="text-[10px]">10</span></div>`;
+                }
+                if (tens1 === 0) step2HTML += `<span class="text-[10px] text-slate-400">なし</span>`;
+                step2HTML += `</div></div>`;
+
+                step2HTML += `<div class="flex items-center justify-start gap-1 bg-white/80 p-1 rounded-lg border border-emerald-200">`;
+                step2HTML += `<span class="text-[9px] font-extrabold text-amber-700 w-10 text-left flex-shrink-0">${q.num2}:</span>`;
+                step2HTML += `<div class="flex gap-1 flex-wrap flex-grow">`;
+                for (let t = 0; t < tens2; t++) {
+                    step2HTML += `<div class="w-7 h-7 sm:w-8 sm:h-8 bg-amber-500 border-amber-600 text-white rounded-md flex flex-col items-center justify-center font-black"><span class="text-[6px]">まとまり</span><span class="text-[10px]">10</span></div>`;
+                }
+                if (tens2 === 0) step2HTML += `<span class="text-[10px] text-slate-400">なし</span>`;
+                step2HTML += `</div></div>`;
+                step2HTML += `</div></div>`;
+
+                step2HTML += `<div class="w-full bg-rose-50 border border-rose-300 rounded-xl p-2 text-center pop-in">`;
+                step2HTML += `<div class="text-[10px] font-extrabold text-rose-800 mb-1">【残り (バラ)】</div>`;
+                step2HTML += `<div class="space-y-1">`;
+                step2HTML += `<div class="flex items-center justify-start gap-1 bg-white/80 p-1 rounded-lg border border-rose-200">`;
+                step2HTML += `<span class="text-[9px] font-extrabold text-sky-700 w-10 text-left flex-shrink-0">${q.num1}:</span>`;
+                step2HTML += `<div class="flex gap-0.5 flex-wrap flex-grow">`;
+                for (let i = 0; i < ones1; i++) {
+                    step2HTML += createBlockElement('red', '');
+                }
+                if (ones1 === 0) step2HTML += `<span class="text-[10px] text-slate-400">なし</span>`;
+                step2HTML += `</div></div>`;
+
+                step2HTML += `<div class="flex items-center justify-start gap-1 bg-white/80 p-1 rounded-lg border border-rose-200">`;
+                step2HTML += `<span class="text-[9px] font-extrabold text-amber-700 w-10 text-left flex-shrink-0">${q.num2}:</span>`;
+                step2HTML += `<div class="flex gap-0.5 flex-wrap flex-grow">`;
+                for (let i = 0; i < ones2; i++) {
+                    step2HTML += createBlockElement('amber', '');
+                }
+                if (ones2 === 0) step2HTML += `<span class="text-[10px] text-slate-400">なし</span>`;
+                step2HTML += `</div></div>`;
+                step2HTML += `</div></div></div>`;
+
+                steps.push({
+                    title: `10のかたまり と バラ に整理してならべるよ！`,
+                    html: step2HTML
+                });
+
+                if (q.operator === '+') {
+                    const totalTens = tens1 + tens2;
+                    const totalOnes = ones1 + ones2;
+
+                    let step3HTML = `<div class="flex flex-col items-center space-y-3 my-1 w-full max-w-xs">`;
+                    step3HTML += `<div class="w-full bg-emerald-100 border border-emerald-400 rounded-xl p-2 text-center">`;
+                    step3HTML += `<div class="text-xs font-extrabold text-emerald-900 mb-1">10のかたまり (${totalTens}つ)</div>`;
+                    step3HTML += `<div class="flex justify-center gap-1.5 flex-wrap">`;
+                    for (let t = 0; t < totalTens; t++) {
+                        step3HTML += `<div class="w-9 h-9 bg-amber-500 border-amber-600 text-white rounded-lg shadow-xs flex flex-col items-center justify-center font-black pop-in" style="animation-delay:${t * 0.1}s"><span class="text-[7px]">まとまり</span><span class="text-xs">10</span></div>`;
+                    }
+                    if (totalTens === 0) step3HTML += `<div class="text-xs text-slate-400 font-bold py-0.5">（0つ）</div>`;
+                    step3HTML += `</div></div>`;
+
+                    step3HTML += `<div class="w-full bg-rose-100 border border-rose-400 rounded-xl p-2 text-center">`;
+                    step3HTML += `<div class="text-xs font-extrabold text-rose-900 mb-1">バラの ブロック (${totalOnes}こ)</div>`;
+                    step3HTML += `<div class="flex justify-center gap-1 flex-wrap">`;
+                    for (let i = 0; i < totalOnes; i++) {
+                        step3HTML += createBlockElement(i < ones1 ? 'red' : 'amber', '', 'pop-in', i * 0.06);
+                    }
+                    if (totalOnes === 0) step3HTML += `<div class="text-xs text-slate-400 font-bold py-0.5">（0こ）</div>`;
+                    step3HTML += `</div></div></div>`;
+
+                    steps.push({
+                        title: `あわせると どうなるかな？`,
+                        html: step3HTML
+                    });
+
+                } else {
+                    const remTens = tens1 - tens2;
+                    const remOnes = ones1 - ones2;
+
+                    let step3HTML = `<div class="flex flex-col items-center space-y-2 my-1 w-full max-w-xs">`;
+                    step3HTML += `<div class="w-full bg-emerald-50 border border-emerald-300 rounded-xl p-2 text-center">`;
+                    step3HTML += `<div class="text-[10px] font-extrabold text-emerald-800 mb-1">【10のかたまり】ぶつかって消えるよ！</div>`;
+                    step3HTML += `<div class="space-y-1">`;
+
+                    step3HTML += `<div class="flex items-center justify-start gap-1 bg-white/80 p-1 rounded-lg border border-emerald-200">`;
+                    step3HTML += `<span class="text-[9px] font-extrabold text-sky-700 w-10 text-left flex-shrink-0">${q.num1}:</span>`;
+                    step3HTML += `<div class="flex gap-1 flex-wrap flex-grow">`;
+                    for (let t = 0; t < tens1; t++) {
+                        if (t < remTens) {
+                            step3HTML += `<div class="w-7 h-7 sm:w-8 sm:h-8 bg-sky-500 border-sky-600 text-white rounded-md flex flex-col items-center justify-center font-black"><span class="text-[6px]">まとまり</span><span class="text-[10px]">10</span></div>`;
+                        } else {
+                            const delay = (t - remTens) * 0.2;
+                            step3HTML += `<div class="w-7 h-7 sm:w-8 sm:h-8 bg-sky-500 border-sky-600 text-white rounded-md flex flex-col items-center justify-center font-black hit-disappear" style="animation-delay:${delay}s"><span class="text-[6px]">まとまり</span><span class="text-[10px]">10</span></div>`;
+                        }
+                    }
+                    if (tens1 === 0) step3HTML += `<span class="text-[10px] text-slate-400">なし</span>`;
+                    step3HTML += `</div></div>`;
+
+                    step3HTML += `<div class="flex items-center justify-start gap-1 bg-white/80 p-1 rounded-lg border border-emerald-200">`;
+                    step3HTML += `<span class="text-[9px] font-extrabold text-amber-700 w-10 text-left flex-shrink-0">${q.num2}:</span>`;
+                    step3HTML += `<div class="flex gap-1 flex-wrap flex-grow">`;
+                    for (let t = 0; t < tens2; t++) {
+                        const delay = t * 0.2;
+                        step3HTML += `<div class="w-7 h-7 sm:w-8 sm:h-8 bg-amber-500 border-amber-600 text-white rounded-md flex flex-col items-center justify-center font-black collide-up-disappear" style="animation-delay:${delay}s"><span class="text-[6px]">まとまり</span><span class="text-[10px]">10</span></div>`;
+                    }
+                    if (tens2 === 0) step3HTML += `<span class="text-[10px] text-slate-400">なし</span>`;
+                    step3HTML += `</div></div></div></div>`;
+
+                    step3HTML += `<div class="w-full bg-rose-50 border border-rose-300 rounded-xl p-2 text-center">`;
+                    step3HTML += `<div class="text-[10px] font-extrabold text-rose-800 mb-1">【残り (バラ)】ぶつかって消えるよ！</div>`;
+                    step3HTML += `<div class="space-y-1">`;
+                    step3HTML += `<div class="flex items-center justify-start gap-1 bg-white/80 p-1 rounded-lg border border-rose-200">`;
+                    step3HTML += `<span class="text-[9px] font-extrabold text-sky-700 w-10 text-left flex-shrink-0">${q.num1}:</span>`;
+                    step3HTML += `<div class="flex gap-0.5 flex-wrap flex-grow">`;
+                    for (let i = 0; i < ones1; i++) {
+                        if (i < remOnes) {
+                            step3HTML += createBlockElement('red', '');
+                        } else {
+                            const delay = (i - remOnes) * 0.15;
+                            step3HTML += createBlockElement('red', '', 'hit-disappear', delay);
+                        }
+                    }
+                    if (ones1 === 0) step3HTML += `<span class="text-[10px] text-slate-400">なし</span>`;
+                    step3HTML += `</div></div>`;
+
+                    step3HTML += `<div class="flex items-center justify-start gap-1 bg-white/80 p-1 rounded-lg border border-rose-200">`;
+                    step3HTML += `<span class="text-[9px] font-extrabold text-amber-700 w-10 text-left flex-shrink-0">${q.num2}:</span>`;
+                    step3HTML += `<div class="flex gap-0.5 flex-wrap flex-grow">`;
+                    for (let i = 0; i < ones2; i++) {
+                        const delay = i * 0.15;
+                        step3HTML += createBlockElement('amber', '', 'collide-up-disappear', delay);
+                    }
+                    if (ones2 === 0) step3HTML += `<span class="text-[10px] text-slate-400">なし</span>`;
+                    step3HTML += `</div></div></div></div>`;
+                    step3HTML += `</div>`;
+
+                    steps.push({
+                        title: `ひく数が うえに ぶつかって 消えるよ！`,
+                        html: step3HTML
+                    });
+                }
+
+                const ansTens = Math.floor(q.answer / 10);
+                const ansOnes = q.answer % 10;
+
+                let step4HTML = `<div class="flex flex-col items-center space-y-3 my-1 w-full max-w-xs">`;
+                step4HTML += `<div class="w-full bg-emerald-50 border border-emerald-300 rounded-xl p-2 text-center">`;
+                step4HTML += `<div class="text-xs font-extrabold text-emerald-800 mb-1">10のかたまり (${ansTens}つ)</div>`;
+                step4HTML += `<div class="flex justify-center gap-1.5 flex-wrap">`;
+                for (let t = 0; t < ansTens; t++) {
+                    const delay = (t + 1) * 0.6;
+                    const countNum = (t + 1) * 10;
+                    step4HTML += `
+                        <div class="inline-block w-9 h-9" style="perspective: 600px;">
+                            <div class="flip-block-inner relative w-full h-full text-center" style="animation-delay: ${delay}s; animation-fill-mode: both;">
+                                <div class="backface-hidden absolute inset-0 w-full h-full rounded-lg shadow-xs border-b-3 flex flex-col items-center justify-center font-black bg-amber-500 border-amber-600 text-white">
+                                    <span class="text-[7px]">まとまり</span><span class="text-xs">10</span>
+                                </div>
+                                <div class="backface-hidden absolute inset-0 w-full h-full rounded-lg shadow-xs border-b-3 flex items-center justify-center font-black text-sm bg-amber-500 border-amber-600 text-white" style="transform: rotateY(180deg);">
+                                    ${countNum}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (ansTens === 0) step4HTML += `<div class="text-xs text-slate-400 font-bold py-0.5">（なし）</div>`;
+                step4HTML += `</div></div>`;
+
+                step4HTML += `<div class="w-full bg-rose-50 border border-rose-300 rounded-xl p-2 text-center">`;
+                step4HTML += `<div class="text-xs font-extrabold text-rose-800 mb-1">バラの ブロック (${ansOnes}こ)</div>`;
+                step4HTML += `<div class="flex justify-center gap-1 flex-wrap">`;
+                for (let i = 0; i < ansOnes; i++) {
+                    const delay = (ansTens + i + 1) * 0.6;
+                    const countNum = ansTens * 10 + (i + 1);
+                    step4HTML += createFlipBlock('red', 'amber', countNum, delay, '');
+                }
+                if (ansOnes === 0) step4HTML += `<div class="text-xs text-slate-400 font-bold py-0.5">（なし）</div>`;
+                step4HTML += `</div></div></div>`;
+
+                steps.push({
+                    title: `1つずつ ひっくりかえして かぞえるよ`,
+                    html: step4HTML
+                });
+
+                steps.push({
+                    title: `こたえの はっぴょう！`,
+                    html: `
+                        <div class="my-3 text-center">
+                            <div class="text-xl font-extrabold text-amber-800 mb-1">こたえは</div>
+                            <div class="text-4xl font-black text-rose-600 pop-in">${q.answer}</div>
+                        </div>
+                    `
+                });
+            }
+
+            return steps;
+        }
+
+        function showStepHelp() {
+            currentStepsData = buildSteps(currentQuestion);
+            currentStepIndex = 0;
+            
+            document.getElementById('stepTotalNum').innerText = currentStepsData.length;
+            const opSymbol = currentQuestion.operator === '+' ? '+' : '-';
+            const katexHeader = String.raw`${currentQuestion.num1} ${opSymbol} ${currentQuestion.num2} = \square`;
+            katex.render(katexHeader, document.getElementById('stepMathHeader'), {
+                throwOnError: false,
+                displayMode: true
+            });
+
+            renderCurrentStep();
+            document.getElementById('stepModal').classList.remove('hidden');
+        }
+
+        function renderCurrentStep() {
+            if (!currentStepsData || currentStepsData.length === 0) return;
+            const step = currentStepsData[currentStepIndex];
+            document.getElementById('stepCurrentNum').innerText = currentStepIndex + 1;
+            
+            const container = document.getElementById('stepContentContainer');
+            container.innerHTML = `
+                <div class="font-extrabold text-sm sm:text-base text-slate-800 mb-1">${step.title}</div>
+                ${step.html}
+            `;
+
+            const prevBtn = document.getElementById('stepPrevBtn');
+            const nextBtn = document.getElementById('stepNextBtn');
+
+            if (currentStepIndex === 0) {
+                prevBtn.disabled = true;
+                prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                prevBtn.disabled = false;
+                prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            if (currentStepIndex === currentStepsData.length - 1) {
+                nextBtn.innerHTML = 'わかった！ <i class="fa-solid fa-check"></i>';
+            } else {
+                nextBtn.innerHTML = 'すすめ <i class="fa-solid fa-chevron-right"></i>';
+            }
+        }
+
+        function changeStep(dir) {
+            if (dir === 1 && currentStepIndex === currentStepsData.length - 1) {
+                closeStepModal();
+                return;
+            }
+            const newIdx = currentStepIndex + dir;
+            if (newIdx >= 0 && newIdx < currentStepsData.length) {
+                currentStepIndex = newIdx;
+                renderCurrentStep();
+                playSound('click');
+            }
+        }
+
+        function closeStepModal() {
+            document.getElementById('stepModal').classList.add('hidden');
+            playSound('click');
+            if (isAutoStepAfterWrong) {
+                isAutoStepAfterWrong = false;
+                currentQuestionIndex++;
+                loadNextQuestion();
+            }
+        }
+
+        function showResultScreen() {
+            clearInterval(timerId);
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+            
+            document.getElementById('scoreText').innerText = correctCount;
+            const emoji = document.getElementById('resultEmoji');
+            const title = document.getElementById('resultTitle');
+
+            if (correctCount === quizQueue.length) {
+                emoji.innerText = "🎉";
+                title.innerText = "すごーい！ぜんもんせいかい！";
+                playSound('fanfare');
+            } else if (correctCount >= 3) {
+                emoji.innerText = "🌟";
+                title.innerText = "よく がんばったね！";
+                playSound('correct');
+            } else {
+                emoji.innerText = "👍";
+                title.innerText = "つぎは 満点を めざそう！";
+                playSound('click');
+            }
+        }
+    </script>
+</body>
+</html>
