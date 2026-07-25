@@ -231,35 +231,35 @@
 </head>
 <body class="flex flex-col justify-between text-slate-800 select-none">
 
-    <header class="bg-emerald-500 text-white shadow-sm px-3 py-1.5 flex-shrink-0 z-20">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-2 cursor-pointer" onclick="goHome()">
+    <header class="bg-emerald-500 text-white shadow-sm px-3 py-2 flex-shrink-0 z-20">
+        <div class="max-w-4xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <div class="flex items-center space-x-2 cursor-pointer flex-shrink-0" onclick="goHome()">
                 <div class="bg-white text-emerald-600 w-7 h-7 rounded-full flex items-center justify-center font-extrabold text-base shadow-sm">
                     ＋
                 </div>
                 <h1 class="text-base sm:text-lg font-extrabold tracking-wide">たしざん・ひきざん</h1>
             </div>
 
-            <!-- 右上ユーザー情報＆ずかんボタン -->
-            <div class="flex items-center space-x-2">
-                <button onclick="openNameModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-full text-xs font-extrabold flex items-center space-x-1 transition shadow-xs">
+            <!-- 右上ユーザー情報＆ずかん・設定ボタン群（折り返し・縮小防止対応） -->
+            <div class="flex items-center flex-wrap gap-1.5 sm:gap-2">
+                <button onclick="openNameModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 sm:px-2.5 rounded-full text-[11px] sm:text-xs font-extrabold flex items-center space-x-1 transition shadow-xs flex-shrink-0">
                     <i class="fa-solid fa-user text-emerald-200"></i>
-                    <span id="headerUserName" class="max-w-[70px] sm:max-w-[100px] truncate">ななし</span>
+                    <span id="headerUserName" class="max-w-[60px] sm:max-w-[100px] truncate">ななし</span>
                 </button>
-                <button onclick="openLibraryModal()" class="bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-amber-950 px-3 py-1 rounded-full text-xs font-black flex items-center space-x-1 transition shadow-xs transform active:scale-95">
+                <button onclick="openLibraryModal()" class="bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-amber-950 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-black flex items-center space-x-1 transition shadow-xs transform active:scale-95 flex-shrink-0">
                     <i class="fa-solid fa-book-open"></i>
                     <span>ずかん</span>
                     <span id="cardCountBadge" class="bg-white text-amber-900 rounded-full px-1.5 py-0.2 text-[10px] font-black ml-0.5">0/12</span>
                 </button>
-                <button onclick="openSpellModal()" class="bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1 rounded-full text-xs font-extrabold flex items-center space-x-1 transition shadow-xs">
+                <button onclick="openSpellModal()" class="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 sm:px-2.5 rounded-full text-[11px] sm:text-xs font-extrabold flex items-center space-x-1 transition shadow-xs flex-shrink-0">
                     <i class="fa-solid fa-wand-magic-sparkles text-purple-200"></i>
                     <span>じゅもん</span>
                 </button>
-                <button onclick="openParentAuthModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-full text-xs font-extrabold flex items-center space-x-1 transition shadow-xs">
+                <button onclick="openParentAuthModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 sm:px-2.5 rounded-full text-[11px] sm:text-xs font-extrabold flex items-center space-x-1 transition shadow-xs flex-shrink-0">
                     <i class="fa-solid fa-gear text-indigo-200"></i>
-                    <span class="hidden sm:inline">ほごしゃ</span>
+                    <span>ほごしゃ</span>
                 </button>
-                <button id="homeBtn" onclick="goHome()" class="hidden bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-2.5 py-1 rounded-full text-xs font-bold flex items-center space-x-1 transition shadow-xs">
+                <button id="homeBtn" onclick="goHome()" class="hidden bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-2 py-1 sm:px-2.5 rounded-full text-[11px] sm:text-xs font-bold flex items-center space-x-1 transition shadow-xs flex-shrink-0">
                     <i class="fa-solid fa-house"></i>
                     <span>もどる</span>
                 </button>
@@ -793,7 +793,6 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // アプリデータの初期化ガード（undefinedエラー防止）
         if (!window.appUserData) {
             window.appUserData = {
                 userName: "チャレンジャー",
@@ -805,7 +804,12 @@
         }
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'math-app-1nen';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        let firebaseConfig = null;
+        try {
+            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        } catch (e) {
+            console.warn("Firebase config parse error:", e);
+        }
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         let db = null;
@@ -837,34 +841,38 @@
 
         function initDataSync() {
             if (!db || !currentUser) return;
-            const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'data');
-            
-            onSnapshot(userDocRef, (snap) => {
-                if (snap.exists()) {
-                    const data = snap.data();
-                    if (data.userName) window.appUserData.userName = data.userName;
-                    if (data.levelStats) window.appUserData.levelStats = data.levelStats;
-                    if (data.obtainedCardIds) window.appUserData.obtainedCardIds = data.obtainedCardIds;
-                    
-                    if (Array.isArray(data.customCards)) {
-                        const localCustoms = window.appUserData.customCards || [];
-                        const localMap = new Map(localCustoms.map(c => [String(c.id), c]));
+            try {
+                const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'data');
+                
+                onSnapshot(userDocRef, (snap) => {
+                    if (snap.exists()) {
+                        const data = snap.data();
+                        if (data.userName) window.appUserData.userName = data.userName;
+                        if (data.levelStats) window.appUserData.levelStats = data.levelStats;
+                        if (data.obtainedCardIds) window.appUserData.obtainedCardIds = data.obtainedCardIds;
                         
-                        window.appUserData.customCards = data.customCards.map(remoteCard => {
-                            const local = localMap.get(String(remoteCard.id));
-                            if (local && local.image && !remoteCard.image) {
-                                return { ...remoteCard, image: local.image };
-                            }
-                            return remoteCard;
-                        });
+                        if (Array.isArray(data.customCards)) {
+                            const localCustoms = window.appUserData.customCards || [];
+                            const localMap = new Map(localCustoms.map(c => [String(c.id), c]));
+                            
+                            window.appUserData.customCards = data.customCards.map(remoteCard => {
+                                const local = localMap.get(String(remoteCard.id));
+                                if (local && local.image && !remoteCard.image) {
+                                    return { ...remoteCard, image: local.image };
+                                }
+                                return remoteCard;
+                            });
+                        }
+                        
+                        if (data.deletedDefaultCardIds) window.appUserData.deletedDefaultCardIds = data.deletedDefaultCardIds;
+                        if (window.updateUIFromUserData) window.updateUIFromUserData();
+                    } else {
+                        saveDataToCloud();
                     }
-                    
-                    if (data.deletedDefaultCardIds) window.appUserData.deletedDefaultCardIds = data.deletedDefaultCardIds;
-                    window.updateUIFromUserData();
-                } else {
-                    saveDataToCloud();
-                }
-            }, (error) => console.error("Snapshot error:", error));
+                }, (error) => console.error("Snapshot error:", error));
+            } catch (e) {
+                console.warn("Sync error:", e);
+            }
         }
 
         window.saveDataToCloud = async function() {
