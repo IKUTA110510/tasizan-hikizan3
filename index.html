@@ -579,10 +579,10 @@
                 </div>
 
                 <!-- ゲットしたカードのリセットエリア -->
-                <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 mb-4 flex items-center justify-between shadow-xs">
+                <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 mb-4 flex items-center justify-between">
                     <div>
                         <h4 class="font-extrabold text-xs text-amber-900">🏆 ゲットしたカードのリセット</h4>
-                        <p class="text-[10px] text-amber-700">全問正解で集めたカードの「獲得記録」だけをクリアします</p>
+                        <p class="text-[10px] text-amber-700">全問正解で集めたカードだけをクリアします</p>
                     </div>
                     <button onclick="openResetObtainedModal()" class="bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-xs transition flex-shrink-0 ml-2">
                         リセット
@@ -665,7 +665,7 @@
         <div class="bg-white rounded-3xl max-w-xs w-full p-4 shadow-2xl border-4 border-amber-400 text-center pop-in">
             <div class="text-3xl mb-1">🧹</div>
             <h3 class="text-base font-extrabold text-slate-800 mb-1">カードのリセット</h3>
-            <p class="text-xs text-slate-600 mb-3">これまでに全問正解でゲットしたカードをすべてリセットしますか？<br><span class="text-[10px] text-emerald-600 font-bold">※保護者様が登録されたカードは消えません。</span></p>
+            <p class="text-xs text-slate-600 mb-3">これまでに全問正解でゲットしたカードをすべてリセットしますか？<br><span class="text-[10px] text-slate-400">※保護者が登録したカードは消えません。</span></p>
             <div class="flex space-x-2">
                 <button onclick="closeResetObtainedModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs py-2 rounded-xl">とじる</button>
                 <button onclick="confirmResetObtainedCards()" class="w-1/2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs py-2 rounded-xl shadow-xs">リセットする</button>
@@ -673,7 +673,7 @@
         </div>
     </div>
 
-    <!-- ふっかつのじゅもん モーダル -->
+    <!-- ふっかつのじゅもん（データ共有・引継ぎ） モーダル -->
     <div id="spellModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3">
         <div class="bg-white rounded-3xl max-w-md w-full p-4 shadow-2xl border-4 border-purple-400 flex flex-col justify-between max-h-[92dvh] overflow-y-auto pop-in">
             <div>
@@ -918,7 +918,6 @@
             { id: 12, name: "ぎんがのロケット", emoji: "🚀🌌", rarity: "SR", desc: "うちゅうを ぼうけんする かっこいい ロケット！", color: "card-rare-SR" }
         ];
 
-        /* カードプロパティの安全正規化関数 */
         function getNormalizedCard(card) {
             if (!card) return null;
             const rarity = card.rarity || 'R';
@@ -977,7 +976,6 @@
             playSound('click');
         };
 
-        // アプリユーザー状態
         window.appUserData = {
             userName: "チャレンジャー",
             levelStats: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
@@ -1449,7 +1447,7 @@
             playSound('click');
         };
 
-        /* 保護者が登録したカード（customCards）は保持し、ゲットしたカードの記録（obtainedCardIds）だけをリセット */
+        /* ゲットしたカードのクリア（保護者が作成したカスタムカード customCards は保持する） */
         window.confirmResetObtainedCards = function() {
             window.appUserData.obtainedCardIds = [];
             if (window.saveDataToCloud) window.saveDataToCloud();
@@ -1561,6 +1559,7 @@
             }
         };
 
+        /* 画像を超軽量化圧縮する処理 */
         function processCardImage(file, isFullImage = false) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
